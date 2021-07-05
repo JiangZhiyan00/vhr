@@ -1,0 +1,4 @@
+##主配置文件(用于指定执行哪个环境下的配置文件)##
+spring:
+  profiles:
+    active: dev

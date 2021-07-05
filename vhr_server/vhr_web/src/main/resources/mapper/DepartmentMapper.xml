@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jiangzhiyan.vhr.mapper.DepartmentMapper" >
+  <resultMap id="BaseResultMap" type="com.jiangzhiyan.vhr.model.Department" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="parentId" property="parentId" jdbcType="INTEGER" />
+    <result column="depPath" property="depPath" jdbcType="VARCHAR" />
+    <result column="enabled" property="enabled" jdbcType="BIT" />
+    <result column="isParent" property="isParent" jdbcType="BIT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, name, parentId, depPath, enabled, isParent
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from department
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from department
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.jiangzhiyan.vhr.model.Department" >
+    insert into department (id, name, parentId, 
+      depPath, enabled, isParent)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{parentId,jdbcType=INTEGER}, 
+      #{depPath,jdbcType=VARCHAR}, #{enabled,jdbcType=BIT}, #{isParent,jdbcType=BIT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jiangzhiyan.vhr.model.Department" >
+    insert into department
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="parentId != null" >
+        parentId,
+      </if>
+      <if test="depPath != null" >
+        depPath,
+      </if>
+      <if test="enabled != null" >
+        enabled,
+      </if>
+      <if test="isParent != null" >
+        isParent,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="parentId != null" >
+        #{parentId,jdbcType=INTEGER},
+      </if>
+      <if test="depPath != null" >
+        #{depPath,jdbcType=VARCHAR},
+      </if>
+      <if test="enabled != null" >
+        #{enabled,jdbcType=BIT},
+      </if>
+      <if test="isParent != null" >
+        #{isParent,jdbcType=BIT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jiangzhiyan.vhr.model.Department" >
+    update department
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="parentId != null" >
+        parentId = #{parentId,jdbcType=INTEGER},
+      </if>
+      <if test="depPath != null" >
+        depPath = #{depPath,jdbcType=VARCHAR},
+      </if>
+      <if test="enabled != null" >
+        enabled = #{enabled,jdbcType=BIT},
+      </if>
+      <if test="isParent != null" >
+        isParent = #{isParent,jdbcType=BIT},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jiangzhiyan.vhr.model.Department" >
+    update department
+    set name = #{name,jdbcType=VARCHAR},
+      parentId = #{parentId,jdbcType=INTEGER},
+      depPath = #{depPath,jdbcType=VARCHAR},
+      enabled = #{enabled,jdbcType=BIT},
+      isParent = #{isParent,jdbcType=BIT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <!--递归查询部门及子部门
+      递归查询:以上条查询的id结果作为下一条的查询条件
+              <collection>标签中的select代表:获取children属性需要执行的方法,id代表:执行方法需要的参数-->
+  <resultMap id="DepartmentsWithChildren" type="com.jiangzhiyan.vhr.model.Department" extends="BaseResultMap">
+    <collection property="children" ofType="com.jiangzhiyan.vhr.model.Department"
+                select="com.jiangzhiyan.vhr.mapper.DepartmentMapper.selectAllDepartmentsWithChildren" column="id">
+    </collection>
+  </resultMap>
+  <select id="selectAllDepartmentsWithChildren" parameterType="java.lang.Integer" resultMap="DepartmentsWithChildren">
+    select
+    <include refid="Base_Column_List"/>
+    from department
+    where parentId = #{parentId}
+  </select>
+
+  <!--调用存储过程添加部门,statementType为CALLABLE
+      mode=IN代表是输入参数,mode=OUT代表是输出参数,分别使用对象的属性result和id接收输出参数-->
+  <select id="addDepartment" statementType="CALLABLE">
+    call addDepartment(#{name,mode=IN,jdbcType=VARCHAR},#{parentId,mode=IN,jdbcType=INTEGER},
+        #{enabled,mode=IN,jdbcType=BOOLEAN},#{result,mode=OUT,jdbcType=INTEGER},#{id,mode=OUT,jdbcType=INTEGER})
+  </select>
+
+  <!--根据parentId查询存在的部门-->
+  <select id="selectByParentId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from department
+    where parentId = #{parentId} and enabled=true
+  </select>
+
+  <!--调用存储过程删除部门,输出result为1则代表操作成功,
+                          为-1代表待删除部门下有员工
+                          为-2代表待删除部门有下级部门-->
+  <select id="deleteDepartment" statementType="CALLABLE">
+    call deleteDepartment(#{id,mode=IN,jdbcType=INTEGER},#{result,mode=OUT,jdbcType=INTEGER})
+  </select>
+
+  <select id="selectAll" resultMap="BaseResultMap">
+    select
+      id,name
+    from department
+  </select>
+</mapper>

@@ -1,0 +1,47 @@
+##开发环境配置##
+##端口号,上下文路径
+server:
+  port: 8081
+  servlet:
+    context-path: /
+    ##设置字符编码
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+##配置数据源
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/vhr?useUnicode=true&charactorEncoding=utf-8&serverTimezone=GMT%2B8
+    username: root
+    password: jae7758521
+  ##启用热部署
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+#  mvc:
+#    static-path-pattern: /resource/**
+#  resources:
+#    static-locations: classpath:/public/
+##mybatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.jiangzhiyan.vhr.model
+  configuration:
+    map-underscore-to-camel-case: true
+##pagehelper分页
+pagehelper:
+  autoRuntimeDialect: true
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+##设置mapper日志打印级别
+logging:
+  level:
+    com:
+      jiangzhiyan:
+        vhr:
+          mapper: debug

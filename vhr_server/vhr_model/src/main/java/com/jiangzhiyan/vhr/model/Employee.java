@@ -2,9 +2,13 @@ package com.jiangzhiyan.vhr.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Employee {
+public class Employee implements Serializable {
+
+    private static final long serialVersionUID = 111L;
+
     private Integer id;
 
     private String name;

@@ -10,4 +10,6 @@ public interface EmployeeMapper extends BaseMapper<Employee, Integer> {
     Employee selectByWorkId(String workId);
 
     Integer selectMaxWorkId();
+
+    Employee getEmployeeById(Integer id);
 }

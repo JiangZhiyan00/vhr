@@ -26,7 +26,7 @@
         <result column="workID" property="workId" jdbcType="CHAR"/>
         <result column="contractTerm" property="contractTerm" jdbcType="DOUBLE"/>
         <result column="conversionTime" property="conversionTime" jdbcType="DATE"/>
-        <result column="notWorkDate" property="notworkDate" jdbcType="DATE"/>
+        <result column="notWorkDate" property="notWorkDate" jdbcType="DATE"/>
         <result column="beginContract" property="beginContract" jdbcType="DATE"/>
         <result column="endContract" property="endContract" jdbcType="DATE"/>
         <result column="workAge" property="workAge" jdbcType="INTEGER"/>
@@ -66,10 +66,11 @@
                 #{jobLevelId,jdbcType=INTEGER}, #{posId,jdbcType=INTEGER}, #{engageForm,jdbcType=VARCHAR},
                 #{tiptopDegree,jdbcType=CHAR}, #{specialty,jdbcType=VARCHAR}, #{school,jdbcType=VARCHAR},
                 #{beginDate,jdbcType=DATE}, #{workState,jdbcType=CHAR}, #{workId,jdbcType=CHAR},
-                #{contractTerm,jdbcType=DOUBLE}, #{conversionTime,jdbcType=DATE}, #{notworkDate,jdbcType=DATE},
+                #{contractTerm,jdbcType=DOUBLE}, #{conversionTime,jdbcType=DATE}, #{notWorkDate,jdbcType=DATE},
                 #{beginContract,jdbcType=DATE}, #{endContract,jdbcType=DATE}, #{workAge,jdbcType=INTEGER})
     </insert>
-    <insert id="insertSelective" parameterType="com.jiangzhiyan.vhr.model.Employee">
+    <insert id="insertSelective" parameterType="com.jiangzhiyan.vhr.model.Employee" useGeneratedKeys="true"
+            keyProperty="id">
         insert into employee
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -144,7 +145,7 @@
             <if test="conversionTime != null">
                 conversionTime,
             </if>
-            <if test="notworkDate != null">
+            <if test="notWorkDate != null">
                 notWorkDate,
             </if>
             <if test="beginContract != null">
@@ -230,8 +231,8 @@
             <if test="conversionTime != null">
                 #{conversionTime,jdbcType=DATE},
             </if>
-            <if test="notworkDate != null">
-                #{notworkDate,jdbcType=DATE},
+            <if test="notWorkDate != null">
+                #{notWorkDate,jdbcType=DATE},
             </if>
             <if test="beginContract != null">
                 #{beginContract,jdbcType=DATE},
@@ -316,8 +317,8 @@
             <if test="conversionTime != null">
                 conversionTime = #{conversionTime,jdbcType=DATE},
             </if>
-            <if test="notworkDate != null">
-                notWorkDate = #{notworkDate,jdbcType=DATE},
+            <if test="notWorkDate != null">
+                notWorkDate = #{notWorkDate,jdbcType=DATE},
             </if>
             <if test="beginContract != null">
                 beginContract = #{beginContract,jdbcType=DATE},
@@ -356,7 +357,7 @@
             workID         = #{workId,jdbcType=CHAR},
             contractTerm   = #{contractTerm,jdbcType=DOUBLE},
             conversionTime = #{conversionTime,jdbcType=DATE},
-            notWorkDate    = #{notworkDate,jdbcType=DATE},
+            notWorkDate    = #{notWorkDate,jdbcType=DATE},
             beginContract  = #{beginContract,jdbcType=DATE},
             endContract    = #{endContract,jdbcType=DATE},
             workAge        = #{workAge,jdbcType=INTEGER}
@@ -506,4 +507,48 @@
             #{emp.beginContract},#{emp.endContract},#{emp.workAge})
         </foreach>
     </insert>
+
+    <!--根据员工id查询-->
+    <select id="getEmployeeById" parameterType="java.lang.Integer" resultMap="allEmployees">
+        SELECT e.id,
+               e.name,
+               gender,
+               birthday,
+               idCard,
+               wedlock,
+               nationId,
+               nativePlace,
+               politicId,
+               email,
+               phone,
+               address,
+               departmentId,
+               jobLevelId,
+               posId,
+               engageForm,
+               tiptopDegree,
+               specialty,
+               school,
+               beginDate,
+               workState,
+               workID,
+               contractTerm,
+               conversionTime,
+               notWorkDate,
+               beginContract,
+               endContract,
+               workAge,
+               n.NAME   nation,
+               p.NAME   politic,
+               d.NAME   department,
+               j.NAME   jobLevel,
+               pos.NAME position
+        FROM employee e
+                 LEFT JOIN nation n ON e.nationId = n.id
+                 LEFT JOIN politicsstatus p ON e.politicId = p.id
+                 LEFT JOIN department d ON e.departmentId = d.id
+                 LEFT JOIN joblevel j ON e.jobLevelId = j.id
+                 LEFT JOIN position pos ON e.posId = pos.id
+        where e.id = #{id}
+    </select>
 </mapper>

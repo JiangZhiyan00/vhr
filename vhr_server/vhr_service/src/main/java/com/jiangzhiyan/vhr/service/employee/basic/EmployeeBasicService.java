@@ -10,6 +10,7 @@ import com.jiangzhiyan.vhr.responseData.ResponseBean;
 import com.jiangzhiyan.vhr.utils.*;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,20 @@ public class EmployeeBasicService extends BaseService<Employee,Integer> {
 
     @Resource
     private DepartmentMapper departmentMapper;
+
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+
+    /**
+     * 添加新员工,添加完成后发送邮件到新员工邮箱
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void insertSelective(Employee employee) {
+        super.insertSelective(employee);
+        Employee addEmp = employeeMapper.getEmployeeById(employee.getId());
+        rabbitTemplate.convertAndSend("vhr.mail.welcome",addEmp);
+    }
 
     public ResponseBean selectAllOptions() {
         Map<String,Object> map = new HashMap<>(5);

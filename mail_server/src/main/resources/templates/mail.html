@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>入职欢迎</title>
+</head>
+<body>
+欢迎<span th:text="${name}"></span>加入 xxx公司大家庭,您的入职信息如下:
+<table>
+    <tr>
+        <td>姓名:</td>
+        <td th:text="${name}"></td>
+    </tr>
+    <tr>
+        <td>职位:</td>
+        <td th:text="${posName}"></td>
+    </tr>
+    <tr>
+        <td>职称:</td>
+        <td th:text="${jobLevelName}"></td>
+    </tr>
+    <tr>
+        <td>部门:</td>
+        <td th:text="${departmentName}"></td>
+    </tr>
+</table>
+<p>希望在未来的日子里,与公司共同发展!</p>
+</body>
+</html>

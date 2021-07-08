@@ -9,7 +9,6 @@
         <version>1.0.0</version>
     </parent>
 
-    <groupId>com.jiangzhiyan</groupId>
     <artifactId>vhr_web</artifactId>
     <version>1.0.0</version>
     <name>vhr_web</name>

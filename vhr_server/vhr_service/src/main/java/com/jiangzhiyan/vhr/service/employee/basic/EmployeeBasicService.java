@@ -1,11 +1,15 @@
 package com.jiangzhiyan.vhr.service.employee.basic;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.jiangzhiyan.vhr.base.BaseQuery;
 import com.jiangzhiyan.vhr.base.BaseService;
 import com.jiangzhiyan.vhr.enums.EngageForm;
 import com.jiangzhiyan.vhr.enums.TiptopDegree;
 import com.jiangzhiyan.vhr.enums.WedLock;
 import com.jiangzhiyan.vhr.mapper.*;
 import com.jiangzhiyan.vhr.model.Employee;
+import com.jiangzhiyan.vhr.query.EmployeeQuery;
 import com.jiangzhiyan.vhr.responseData.ResponseBean;
 import com.jiangzhiyan.vhr.utils.*;
 import org.apache.commons.lang3.EnumUtils;
@@ -17,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.xml.ws.Response;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
@@ -102,6 +107,19 @@ public class EmployeeBasicService extends BaseService<Employee,Integer> {
                 nationMapper.selectAll(),positionMapper.selectAll(),jobLevelMapper.selectEnabled(),
                 departmentMapper.selectAll());
         AssertExceptionUtil.isTrue(employeeMapper.insertBatch(employeeList) != employeeList.size());
+    }
+
+    /**
+     * 分页查询所有员工及其薪资信息
+     */
+    public ResponseBean selectEmpsWithSalary(EmployeeQuery query) {
+        PageHelper.startPage(query.getPageNum(),query.getPageSize());
+        List<Employee> employees = employeeMapper.selectEmpsWithSalary(query);
+        PageInfo<Employee> pageInfo = new PageInfo<>(employees);
+        Map<String ,Object> map = new HashMap<>(2);
+        map.put("total",pageInfo.getTotal());
+        map.put("emps",pageInfo.getList());
+        return ResponseBean.success(map);
     }
 
     @Override

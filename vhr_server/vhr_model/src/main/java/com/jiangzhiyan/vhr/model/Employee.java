@@ -96,6 +96,11 @@ public class Employee implements Serializable {
      */
     private String position;
 
+    /**
+     * 薪资
+     */
+    private Salary salary;
+
     public Integer getId() {
         return id;
     }
@@ -358,5 +363,13 @@ public class Employee implements Serializable {
 
     public void setPosition(String position) {
         this.position = position;
+    }
+
+    public Salary getSalary() {
+        return salary;
+    }
+
+    public void setSalary(Salary salary) {
+        this.salary = salary;
     }
 }

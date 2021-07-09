@@ -66,4 +66,18 @@
       sid = #{sid,jdbcType=INTEGER}
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <!--根据员工id查询-->
+  <select id="selectByEmpId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+        <include refid="Base_Column_List"/>
+    from empsalary
+    where eid = #{empId}
+  </select>
+
+  <!--根据员工id删除-->
+  <delete id="deleteByEmpId" parameterType="java.lang.Integer">
+    delete from empsalary
+    where eid = #{empId}
+  </delete>
 </mapper>

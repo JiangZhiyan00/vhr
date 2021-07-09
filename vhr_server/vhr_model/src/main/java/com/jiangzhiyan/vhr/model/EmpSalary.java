@@ -7,6 +7,11 @@ public class EmpSalary {
 
     private Integer sid;
 
+    public EmpSalary(Integer eid, Integer sid) {
+        this.eid = eid;
+        this.sid = sid;
+    }
+
     public Integer getId() {
         return id;
     }

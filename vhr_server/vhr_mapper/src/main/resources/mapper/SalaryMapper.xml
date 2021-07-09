@@ -203,5 +203,15 @@
         select
         <include refid="Base_Column_List"/>
         from salary
+        order by id
     </select>
+
+    <!--删除账套-->
+    <delete id="deleteBatch">
+        delete from salary
+        where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
 </mapper>

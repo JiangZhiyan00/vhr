@@ -202,4 +202,12 @@
         </if>
     ORDER BY h.id
   </select>
+
+  <!--查询除了当前hr之外的所有hr-->
+  <select id="getAllHrsExceptCurrent" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+      id,name,phone,telephone,address,enabled,username,userface,remark
+    from hr
+    where id != #{id} and enabled =true
+  </select>
 </mapper>

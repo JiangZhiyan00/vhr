@@ -196,7 +196,7 @@
     WHERE
       h.id = #{hrId}
       AND h.enabled = true
-      AND m1.enabled = true
+      AND m2.enabled = true
   </select>
 
   <!--获取所有菜单,包含拥有菜单访问权所需要的角色List<Role>,(菜单)一对多(角色)-->

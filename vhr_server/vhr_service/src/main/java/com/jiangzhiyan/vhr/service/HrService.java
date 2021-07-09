@@ -4,6 +4,7 @@ import com.jiangzhiyan.vhr.mapper.HrMapper;
 import com.jiangzhiyan.vhr.mapper.HrRoleMapper;
 import com.jiangzhiyan.vhr.model.Hr;
 import com.jiangzhiyan.vhr.model.Role;
+import com.jiangzhiyan.vhr.responseData.ResponseBean;
 import com.jiangzhiyan.vhr.utils.AssertExceptionUtil;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -76,5 +77,13 @@ public class HrService implements UserDetailsService {
             AssertExceptionUtil.isTrue(hrRoleMapper.deleteByHrId(id) != existRoleIds.size());
         }
         AssertExceptionUtil.isTrue(hrMapper.deleteByPrimaryKey(id) != 1);
+    }
+
+    /**
+     * 查询除了当前hr之外的所有hr信息
+     */
+    public ResponseBean getAllHrsExceptCurrent() {
+        Hr currentHr = (Hr) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseBean.success(hrMapper.getAllHrsExceptCurrent(currentHr.getId()));
     }
 }

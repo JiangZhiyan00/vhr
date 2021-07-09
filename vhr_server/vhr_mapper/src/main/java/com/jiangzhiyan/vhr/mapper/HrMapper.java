@@ -15,4 +15,6 @@ public interface HrMapper extends BaseMapper<Hr, Integer> {
 
     List<Hr> selectHrsByKeywordExceptCurrent(@Param("currentId") Integer currentId,
                                             @Param("keyword")String keyword);
+
+    List<Hr> getAllHrsExceptCurrent(Integer id);
 }

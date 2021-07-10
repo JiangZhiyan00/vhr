@@ -17,4 +17,7 @@ public interface HrMapper extends BaseMapper<Hr, Integer> {
                                             @Param("keyword")String keyword);
 
     List<Hr> getAllHrsExceptCurrent(Integer id);
+
+    int updateHrPassword(@Param("hrId") Integer hrId,
+                         @Param("encodePassword") String encodePassword);
 }

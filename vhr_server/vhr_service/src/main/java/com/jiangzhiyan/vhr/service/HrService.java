@@ -6,16 +6,23 @@ import com.jiangzhiyan.vhr.model.Hr;
 import com.jiangzhiyan.vhr.model.Role;
 import com.jiangzhiyan.vhr.responseData.ResponseBean;
 import com.jiangzhiyan.vhr.utils.AssertExceptionUtil;
+import com.jiangzhiyan.vhr.utils.PhoneUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class HrService implements UserDetailsService {
@@ -48,6 +55,9 @@ public class HrService implements UserDetailsService {
         return hrMapper.selectHrsByKeywordExceptCurrent(currentHr.getId(),keyword);
     }
 
+    /**
+     * 更新非当前登录hr的信息
+     */
     @Transactional(rollbackFor = Exception.class)
     public void updateHr(Hr hr) {
         AssertExceptionUtil.isTrue(hr == null || hr.getId() == null,"无效的请求");
@@ -85,5 +95,37 @@ public class HrService implements UserDetailsService {
     public ResponseBean getAllHrsExceptCurrent() {
         Hr currentHr = (Hr) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseBean.success(hrMapper.getAllHrsExceptCurrent(currentHr.getId()));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void updateCurrentHrInfo(Hr hr,Authentication authentication){
+        AssertExceptionUtil.isTrue(hr == null || hr.getId() == null,"无效的请求");
+        AssertExceptionUtil.isTrue(StringUtils.isBlank(hr.getName()),"修改的名称不能为空");
+        AssertExceptionUtil.isTrue(StringUtils.isBlank(hr.getPhone()),"修改的手机号码不能为空");
+        AssertExceptionUtil.isTrue(!PhoneUtil.isValidMobile(hr.getPhone()),"修改的手机号码格式不正确");
+        AssertExceptionUtil.isTrue(StringUtils.isBlank(hr.getTelephone()),"修改的电话号码不能为空");
+        AssertExceptionUtil.isTrue(StringUtils.isBlank(hr.getAddress()),"修改的家庭住址不能为空");
+        AssertExceptionUtil.isTrue(hrMapper.updateByPrimaryKeySelective(hr) != 1);
+        //更新security中存储的Authentication对象
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken
+                (hr, authentication.getCredentials(), authentication.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(token);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void updatePassword(Map<String, Object> passwordInfo) {
+        String oldPassword = (String) passwordInfo.get("oldPassword");
+        String newPassword = (String) passwordInfo.get("newPassword");
+        String confirmPassword = (String) passwordInfo.get("confirmPassword");
+        AssertExceptionUtil.isTrue(StringUtils.isBlank(oldPassword), "原始密码不能为空");
+        AssertExceptionUtil.isTrue(StringUtils.isBlank(newPassword), "新密码不能为空");
+        AssertExceptionUtil.isTrue(StringUtils.isBlank(confirmPassword), "确认密码不能为空");
+        AssertExceptionUtil.isTrue(oldPassword.equals(newPassword),"新密码不能与原始密码一致");
+        AssertExceptionUtil.isTrue(!newPassword.equals(confirmPassword),"两次输入的新密码不一致");
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        Integer hrId = ((Hr) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+        Hr hr = hrMapper.selectByPrimaryKey(hrId);
+        AssertExceptionUtil.isTrue(!passwordEncoder.matches(oldPassword,hr.getPassword()),"原始密码错误,请重新输入");
+        AssertExceptionUtil.isTrue(hrMapper.updateHrPassword(hrId,passwordEncoder.encode(newPassword)) != 1);
     }
 }

@@ -17,7 +17,7 @@
     id, name, phone, telephone, address, enabled, username, password, userface, remark
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
-    select 
+    select
     <include refid="Base_Column_List" />
     from hr
     where id = #{id,jdbcType=INTEGER}
@@ -27,12 +27,12 @@
     where id = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.jiangzhiyan.vhr.model.Hr" >
-    insert into hr (id, name, phone, 
-      telephone, address, enabled, 
-      username, password, userface, 
+    insert into hr (id, name, phone,
+      telephone, address, enabled,
+      username, password, userface,
       remark)
-    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{phone,jdbcType=CHAR}, 
-      #{telephone,jdbcType=VARCHAR}, #{address,jdbcType=VARCHAR}, #{enabled,jdbcType=BIT}, 
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{phone,jdbcType=CHAR},
+      #{telephone,jdbcType=VARCHAR}, #{address,jdbcType=VARCHAR}, #{enabled,jdbcType=BIT},
       #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{userFace,jdbcType=VARCHAR},
       #{remark,jdbcType=VARCHAR})
   </insert>
@@ -210,4 +210,11 @@
     from hr
     where id != #{id} and enabled =true
   </select>
+
+  <!--更改密码-->
+  <update id="updateHrPassword">
+    update hr
+    set password = #{encodePassword}
+    where id = #{hrId}
+  </update>
 </mapper>

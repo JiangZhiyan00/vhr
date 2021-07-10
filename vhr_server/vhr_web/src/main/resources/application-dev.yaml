@@ -52,3 +52,7 @@ logging:
       jiangzhiyan:
         vhr:
           mapper: debug
+##nginx配置(配置了nginx监听的88端口)
+fastdfs:
+  nginx:
+    host: http://47.98.179.8:88/

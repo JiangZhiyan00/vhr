@@ -6,8 +6,10 @@ import com.jiangzhiyan.vhr.model.Hr;
 import com.jiangzhiyan.vhr.model.Role;
 import com.jiangzhiyan.vhr.responseData.ResponseBean;
 import com.jiangzhiyan.vhr.utils.AssertExceptionUtil;
+import com.jiangzhiyan.vhr.utils.FastDFSUtil;
 import com.jiangzhiyan.vhr.utils.PhoneUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -32,6 +35,9 @@ public class HrService implements UserDetailsService {
 
     @Resource
     private HrRoleMapper hrRoleMapper;
+
+    @Value("${fastdfs.nginx.host}")
+    private String nginxHost;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -127,5 +133,23 @@ public class HrService implements UserDetailsService {
         Hr hr = hrMapper.selectByPrimaryKey(hrId);
         AssertExceptionUtil.isTrue(!passwordEncoder.matches(oldPassword,hr.getPassword()),"原始密码错误,请重新输入");
         AssertExceptionUtil.isTrue(hrMapper.updateHrPassword(hrId,passwordEncoder.encode(newPassword)) != 1);
+    }
+
+    /**
+     * 更新头像
+     * @param file 头像图片文件
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserFace(MultipartFile file,Authentication authentication) {
+        String filePath = FastDFSUtil.upload(file);
+        AssertExceptionUtil.isTrue(filePath == null,"文件上传失败");
+        String url = nginxHost + filePath;
+        Hr hr = (Hr) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        hr.setUserFace(url);
+        AssertExceptionUtil.isTrue(hrMapper.updateByPrimaryKeySelective(hr) != 1);
+        //同时需要将security中的hr信息更新
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken
+                (hr, authentication.getCredentials(), authentication.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(token);
     }
 }

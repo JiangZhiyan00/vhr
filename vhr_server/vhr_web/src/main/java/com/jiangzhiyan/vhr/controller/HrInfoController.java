@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.Map;
@@ -41,5 +42,12 @@ public class HrInfoController {
     public ResponseBean updatePassword(@RequestBody Map<String,Object> passwordInfo){
         hrService.updatePassword(passwordInfo);
         return ResponseBean.success("密码修改成功,系统即将退出...");
+    }
+
+    @ApiOperation("更改头像")
+    @PostMapping("/updateUserFace")
+    public ResponseBean updateUserFace(MultipartFile file,@ApiIgnore Authentication authentication){
+        hrService.updateUserFace(file,authentication);
+        return ResponseBean.success("头像更新成功");
     }
 }

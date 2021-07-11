@@ -7,6 +7,7 @@ import com.jiangzhiyan.vhr.filter.VerifyCodeFilter;
 import com.jiangzhiyan.vhr.model.Hr;
 import com.jiangzhiyan.vhr.responseData.ResponseBean;
 import com.jiangzhiyan.vhr.service.HrService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.*;
@@ -21,10 +22,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.session.ConcurrentSessionFilter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -68,6 +72,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     SessionRegistry sessionRegistry() {
         return new SessionRegistryImpl();
+    }
+
+    /**
+     * 注入application文件中配置的datasource
+     */
+    @Autowired
+    private DataSource datasource;
+
+    /**
+     * 基于JDBC的持久登录令牌存储库实现(表名:persistent_logins)
+     */
+    @Bean
+    PersistentTokenRepository persistentTokenRepository(){
+        JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
+        jdbcTokenRepository.setDataSource(datasource);
+        //第一次启动时自动建表,之后此行代码必须注释掉
+        //jdbcTokenRepository.setCreateTableOnStartup(true);
+        return jdbcTokenRepository;
     }
 
     /**
@@ -138,6 +160,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 });
         //设置同一用户最大的会话数量为1(即只能有一处地方登录),前提:用户对象需要实现hashCode和equals方法
         http.sessionManagement().maximumSessions(1).sessionRegistry(sessionRegistry());
+
+        //配置rememberMe,使用数据库方式存储用户持久化令牌,记住我的http请求参数名默认为remember-me,改为rememberMe
+        http.rememberMe().rememberMeParameter("rememberMe").tokenRepository(persistentTokenRepository());
 
         //注销登录
         http.logout()

@@ -15,19 +15,20 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.session.ConcurrentSessionFilter;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -59,6 +60,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * 会话实例注册表bean
+     */
+    @Bean
+    SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
     }
 
     /**
@@ -127,6 +136,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     }
                     printResInfoAsJson(resp, responseBean);
                 });
+        //设置同一用户最大的会话数量为1(即只能有一处地方登录),前提:用户对象需要实现hashCode和equals方法
+        http.sessionManagement().maximumSessions(1).sessionRegistry(sessionRegistry());
 
         //注销登录
         http.logout()
@@ -155,14 +166,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         //没有认证时，在这里处理结果，不要重定向
         http.exceptionHandling()
-                .authenticationEntryPoint(new AuthenticationEntryPoint() {
-                    @Override
-                    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//401
-                        ResponseBean responseBean = ResponseBean.error("访问失败");
-                        printResInfoAsJson(response,responseBean);
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//401
+                    ResponseBean responseBean = ResponseBean.error("访问失败");
+                    if (authException instanceof InsufficientAuthenticationException) {
+                        responseBean.setMsg("尚未登录,请重新登录");
                     }
+                    printResInfoAsJson(response, responseBean);
                 });
+
+        //同一用户多处登录过滤器
+        http.addFilterAt(new ConcurrentSessionFilter(sessionRegistry(), event -> {
+            HttpServletResponse resp = event.getResponse();
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//401
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            String nowTime = sdf.format(new Date());
+            ResponseBean responseBean = ResponseBean.error
+                    (nowTime + " 此账号在别处登录,您被强制下线,如果不是您的操作,请尽快修改密码!");
+            printResInfoAsJson(resp, responseBean);
+        }), ConcurrentSessionFilter.class);
     }
 
     private void printResInfoAsJson(HttpServletResponse resp, Object result) throws IOException {
